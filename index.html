@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OKIENAK</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; font-family: 'Poppins', sans-serif; margin:0; padding:0; }
+  html, body { height:100%; width:100%; }
+  body { display:flex; flex-direction:column; justify-content:center; align-items:center; background:#2c003e; color:#fff; }
+
+  .container { 
+    background: linear-gradient(145deg, #3e0059, #5a007d); 
+    border-radius:25px; 
+    padding:2.5rem; 
+    width:90%; 
+    max-width:600px; 
+    box-shadow:0 10px 40px rgba(0,0,0,0.5); 
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  h1 { text-align:center; font-weight:600; margin-bottom:1.5rem; color:#f0f0ff; }
+  input, textarea { width:100%; padding:1rem; margin-top:0.5rem; margin-bottom:1rem; border-radius:15px; border:none; font-size:1rem; outline:none; }
+  input { background:#fff; color:#2c003e; text-align:center; }
+  textarea { background:#fff; color:#2c003e; min-height:150px; resize:none; overflow:auto; text-align:left; }
+  textarea:disabled { background:#d3d3d3; }
+  
+  button { background:#9b00ff; color:#fff; border:none; padding:1rem; border-radius:15px; cursor:pointer; font-weight:600; font-size:1rem; transition:0.3s; width:100%; margin-bottom:0.5rem; }
+  button:hover { background:#b300ff; }
+
+  .hidden { display:none; }
+  .note-display { white-space:pre-wrap; word-wrap:break-word; font-size:1rem; line-height:1.6; margin-top:1rem; background:#5a007d; padding:1rem; border-radius:15px; width:100%; overflow:auto; max-height:400px; }
+  a { color:#ffddff; text-decoration:underline; }
+  .link-container { margin-top:1rem; text-align:center; }
+  footer { text-align:center; margin-top:auto; font-size:0.9rem; color:#bbb; width:100%; padding:1rem 0; }
+
+  p { margin-bottom:0.5rem; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LOGIN PAGE -->
+  <div id="login-page">
+    <h1>🔒 OKIENAK</h1>
+    <input id="login-email" type="text" placeholder="Email">
+    <input id="login-password" type="password" placeholder="Password">
+    <button id="login-btn">Masuk</button>
+  </div>
+
+  <!-- NOTE PAGE -->
+  <div id="note-page" class="hidden">
+    <h1>📝 Catatan Anda</h1>
+    <p>Halo, <span id="user-name"></span></p>
+    <textarea id="note-input" placeholder="Tulis catatanmu di sini..."></textarea>
+    <button id="save-btn">Simpan Catatan</button>
+
+    <div id="saved-note" class="hidden">
+      <h3>Catatan Tersimpan</h3>
+      <p class="note-display" id="note-display"></p>
+      <div class="link-container">
+        <p>Bagikan catatan:</p>
+        <a id="note-link" href="#" target="_blank">Buka Catatan Ini</a>
+      </div>
+    </div>
+
+    <button id="logout-btn" style="background:#ff004d;">Keluar</button>
+  </div>
+
+</div>
+
+<footer>© 2025 OKIENAK. Contact cidmomo19@gmail.com.</footer>
+
+<script>
+  // ==== KONFIGURASI LOGIN ====
+  const MY_EMAIL = "Okienak";          
+  const MY_PASSWORD = "ipulapik999#";  
+
+  // ==== ELEMENT DOM ====
+  const loginPage = document.getElementById("login-page");
+  const notePage = document.getElementById("note-page");
+  const loginEmail = document.getElementById("login-email");
+  const loginPassword = document.getElementById("login-password");
+  const loginBtn = document.getElementById("login-btn");
+
+  const userName = document.getElementById("user-name");
+  const noteInput = document.getElementById("note-input");
+  const saveBtn = document.getElementById("save-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+  const savedNote = document.getElementById("saved-note");
+  const noteDisplay = document.getElementById("note-display");
+  const noteLink = document.getElementById("note-link");
+
+  // ==== LOGIN ====
+  loginBtn.addEventListener("click",()=>{
+    const email = loginEmail.value.trim();
+    const pass = loginPassword.value.trim();
+    if(email===MY_EMAIL && pass===MY_PASSWORD){
+      localStorage.setItem("loggedIn", email);
+      showNotePage(email,true);
+    } else {
+      alert("Email atau password salah!");
+    }
+  });
+
+  // ==== LOGOUT ====
+  logoutBtn.addEventListener("click",()=>{
+    localStorage.removeItem("loggedIn");
+    location.reload();
+  });
+
+  // ==== SIMPAN CATATAN ====
+  saveBtn.addEventListener("click",()=>{
+    const text = noteInput.value.trim();
+    if(!text) return alert("Tulis catatan dulu!");
+    localStorage.setItem("note", text);
+    noteDisplay.innerHTML = linkify(text);
+    savedNote.classList.remove("hidden");
+
+    // buat link share
+    noteLink.href = `${window.location.origin}${window.location.pathname}?note=1`;
+    alert("Catatan berhasil disimpan!");
+  });
+
+  // ==== TAMPILKAN HALAMAN CATATAN ====
+  function showNotePage(email, editable=false){
+    loginPage.classList.add("hidden");
+    notePage.classList.remove("hidden");
+    userName.textContent = email;
+
+    const saved = localStorage.getItem("note");
+    if(saved){
+      noteDisplay.innerHTML = linkify(saved);
+      savedNote.classList.remove("hidden");
+      if(editable) noteInput.value = saved;
+    }
+
+    if(editable){
+      noteInput.disabled=false;
+      saveBtn.disabled=false;
+      noteInput.style.display="block";
+      saveBtn.style.display="block";
+    } else {
+      noteInput.style.display="none";
+      saveBtn.style.display="none";
+    }
+
+    // link share
+    noteLink.href = `${window.location.origin}${window.location.pathname}?note=1`;
+  }
+
+  // ==== AUTO LOGIN DAN SHARE LINK VIEW ====
+  window.addEventListener("load",()=>{
+    const logged = localStorage.getItem("loggedIn");
+    if(logged) showNotePage(logged,true);
+
+    const params = new URLSearchParams(window.location.search);
+    if(params.get("note")){
+      const saved = localStorage.getItem("note");
+      if(saved) showNotePage("Guest", false);
+    }
+  });
+
+  // ==== FUNGS LINKIFY ====
+  function linkify(text){
+    const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    return text.replace(urlPattern, '<a href="$1" target="_blank">$1</a>');
+  }
+</script>
+
+</body>
+</html>
